@@ -13,7 +13,7 @@ export default function Admin() {
   }, [])
 
   const fetchAuswertung = async () => {
-    const { data } = await supabase.from('wahlstimmen').select('*')
+    const { data } = await supabase.from('wahlstimmen1').select('*')
     const gruppiert = {}
 
     data.forEach(eintrag => {

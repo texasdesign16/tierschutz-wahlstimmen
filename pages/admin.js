@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/router'
+import { fetchEintraege } from '../lib/sheet'
 
 export default function Admin() {
   const [daten, setDaten] = useState([])
@@ -9,18 +9,18 @@ export default function Admin() {
   useEffect(() => {
     const mitglied = localStorage.getItem('mitglied')
     if (mitglied !== 'Admin') router.push('/')
-    else fetchAuswertung()
+    else ladeDaten()
   }, [])
 
-  const fetchAuswertung = async () => {
-    const { data } = await supabase.from('wahlstimmen1').select('*')
+  const ladeDaten = async () => {
+    const eintraege = await fetchEintraege()
     const gruppiert = {}
 
-    data.forEach(eintrag => {
-      const m = eintrag.mitglied
+    eintraege.forEach(e => {
+      const m = e.mitglied
       if (!gruppiert[m]) gruppiert[m] = { gesamt: 0, briefwahl: 0 }
       gruppiert[m].gesamt++
-      if (eintrag.briefwahl) gruppiert[m].briefwahl++
+      if (e.briefwahl === 'Ja') gruppiert[m].briefwahl++
     })
 
     const auswertung = Object.entries(gruppiert).map(([mitglied, werte]) => ({

@@ -8,50 +8,69 @@ export default function Admin() {
 
   useEffect(() => {
     const mitglied = localStorage.getItem('mitglied')
-    if (mitglied !== 'Admin') router.push('/')
-    else ladeAuswertung()
+    if (mitglied !== 'Admin') {
+      router.push('/')
+    } else {
+      ladeAuswertung()
+    }
   }, [])
 
   const ladeAuswertung = async () => {
-    const alle = await fetchEintraege()
+    const eintraege = await fetchEintraege()
     const gruppiert = {}
 
-    alle.forEach(eintrag => {
-      const m = eintrag.mitglied
+    eintraege.forEach(eintrag => {
+      const m = eintrag.mitglied || 'Unbekannt'
       if (!gruppiert[m]) gruppiert[m] = { gesamt: 0, briefwahl: 0 }
       gruppiert[m].gesamt++
-      if (eintrag.briefwahl === 'Ja') gruppiert[m].briefwahl++
+      if (eintrag.briefwahl?.toLowerCase() === 'ja') gruppiert[m].briefwahl++
     })
 
     const auswertung = Object.entries(gruppiert).map(([mitglied, werte]) => ({
       mitglied,
-      ...werte
+      ...werte,
     }))
 
     setDaten(auswertung)
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('mitglied')
+    router.push('/')
+  }
+
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Adminbereich</h1>
-      <table className="w-full border text-left">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="p-2">Mitglied</th>
-            <th className="p-2">Stimmen</th>
-            <th className="p-2">Briefwahl</th>
-          </tr>
-        </thead>
-        <tbody>
-          {daten.map((d, i) => (
-            <tr key={i} className="border-t">
-              <td className="p-2">{d.mitglied}</td>
-              <td className="p-2">{d.gesamt}</td>
-              <td className="p-2">{d.briefwahl}</td>
+    <div className="p-4 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Adminbereich – Auswertung</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 text-white px-4 py-2 rounded"
+        >
+          Logout
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border text-sm">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="p-3 border">Mitglied</th>
+              <th className="p-3 border">Gesamt</th>
+              <th className="p-3 border">Briefwahl</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {daten.map((d, i) => (
+              <tr key={i} className="text-center border-t hover:bg-gray-50">
+                <td className="p-3 border font-medium">{d.mitglied}</td>
+                <td className="p-3 border">{d.gesamt}</td>
+                <td className="p-3 border">{d.briefwahl}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

@@ -20,7 +20,7 @@ export default function Dashboard() {
 
   const fetchEintraege = async (mitgliedName) => {
     const { data } = await supabase
-      .from('wahlstimmen')
+      .from('wahlstimmen1')
       .select('*')
       .eq('mitglied', mitgliedName)
       .order('created_at', { ascending: false })
@@ -32,14 +32,14 @@ export default function Dashboard() {
     if (!trimmed) return alert('Bitte einen Namen eingeben')
     
     const { data: existing } = await supabase
-      .from('wahlstimmen')
+      .from('wahlstimmen1')
       .select('id')
       .eq('mitglied', mitglied)
     
     const duplikat = existing?.some(e => e.name.trim().toLowerCase() === trimmed)
     if (duplikat) return alert('Name bereits eingetragen')
 
-    const { error } = await supabase.from('wahlstimmen').insert({
+    const { error } = await supabase.from('wahlstimmen1').insert({
       name: name.trim(),
       briefwahl,
       mitglied
@@ -53,7 +53,7 @@ export default function Dashboard() {
   }
 
   const deleteEintrag = async (id) => {
-    await supabase.from('wahlstimmen').delete().eq('id', id)
+    await supabase.from('wahlstimmen1').delete().eq('id', id)
     fetchEintraege(mitglied)
   }
 

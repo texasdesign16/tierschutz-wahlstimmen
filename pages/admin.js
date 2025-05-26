@@ -9,18 +9,18 @@ export default function Admin() {
   useEffect(() => {
     const mitglied = localStorage.getItem('mitglied')
     if (mitglied !== 'Admin') router.push('/')
-    else ladeDaten()
+    else ladeAuswertung()
   }, [])
 
-  const ladeDaten = async () => {
-    const eintraege = await fetchEintraege()
+  const ladeAuswertung = async () => {
+    const alle = await fetchEintraege()
     const gruppiert = {}
 
-    eintraege.forEach(e => {
-      const m = e.mitglied
+    alle.forEach(eintrag => {
+      const m = eintrag.mitglied
       if (!gruppiert[m]) gruppiert[m] = { gesamt: 0, briefwahl: 0 }
       gruppiert[m].gesamt++
-      if (e.briefwahl === 'Ja') gruppiert[m].briefwahl++
+      if (eintrag.briefwahl === 'Ja') gruppiert[m].briefwahl++
     })
 
     const auswertung = Object.entries(gruppiert).map(([mitglied, werte]) => ({

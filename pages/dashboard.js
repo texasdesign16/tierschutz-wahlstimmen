@@ -1,96 +1,111 @@
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-import { fetchEintraege, appendEintrag } from '../lib/sheet'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Dashboard() {
-  const router = useRouter()
-  const [name, setName] = useState('')
-  const [briefwahl, setBriefwahl] = useState(false)
-  const [eintraege, setEintraege] = useState([])
-  const [mitglied, setMitglied] = useState(null)
+  const [name, setName] = useState('');
+  const [briefwahl, setBriefwahl] = useState('ja');
+  const [eintraege, setEintraege] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem('mitglied')
-    if (!stored || stored === 'Admin') {
-      router.push('/')
+    const isLoggedIn = document.cookie.includes('eingeloggt=true');
+    if (!isLoggedIn) {
+      router.push('/');
     } else {
-      setMitglied(stored)
-      ladeEintraege()
+      ladeEintraege();
     }
-  }, [])
+  }, []);
 
   const ladeEintraege = async () => {
-    const daten = await fetchEintraege()
-    const gefiltert = daten.filter(e => e.mitglied === mitglied)
-    setEintraege(gefiltert.reverse())
-  }
+    const res = await fetch('/api/alle');
+    const data = await res.json();
+    setEintraege(data);
+  };
 
-  const addEintrag = async () => {
-    const trimmed = name.trim().toLowerCase()
-    if (!trimmed) return alert('Bitte einen Namen eingeben')
+  const speichern = async (e) => {
+    e.preventDefault();
+    if (!name) return;
 
-    const vorhanden = eintraege.some(e => e.name?.trim().toLowerCase() === trimmed)
-    if (vorhanden) return alert('Name wurde bereits eingetragen')
+    await fetch('/api/eintragen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, briefwahl }),
+    });
 
-    await appendEintrag(name.trim(), briefwahl, mitglied)
-    setName('')
-    setBriefwahl(false)
-    ladeEintraege()
-  }
+    setName('');
+    ladeEintraege();
+  };
 
-  const handleLogout = () => {
-    localStorage.removeItem('mitglied')
-    router.push('/')
-  }
+  const loeschen = async (id) => {
+    await fetch('/api/loeschen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+
+    ladeEintraege();
+  };
+
+  const logout = () => {
+    document.cookie = 'eingeloggt=; Max-Age=0';
+    router.push('/');
+  };
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Willkommen, {mitglied}!</h1>
-        <button onClick={handleLogout} className="text-sm text-red-600 underline">
+    <div className="min-h-screen bg-green-50 p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-green-800">Mitgliederbereich</h1>
+        <button onClick={logout} className="text-white bg-green-600 px-4 py-2 rounded hover:bg-green-700">
           Logout
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+      <form onSubmit={speichern} className="bg-white p-4 rounded shadow mb-6 flex flex-col md:flex-row gap-4">
         <input
           type="text"
-          className="border px-3 py-2 rounded flex-1"
-          placeholder="Name der wählenden Person"
+          placeholder="Name"
+          className="border p-2 flex-1"
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={(e) => setName(e.target.value)}
         />
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={briefwahl}
-            onChange={e => setBriefwahl(e.target.checked)}
-          />
-          Briefwahl
-        </label>
-        <button
-          onClick={addEintrag}
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          Eintragen
+        <select className="border p-2" value={briefwahl} onChange={(e) => setBriefwahl(e.target.value)}>
+          <option value="ja">Briefwahl: Ja</option>
+          <option value="nein">Briefwahl: Nein</option>
+        </select>
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Speichern
         </button>
-      </div>
+      </form>
 
-      <ul className="space-y-2">
-        {eintraege.map((e, i) => (
-          <li
-            key={i}
-            className="flex justify-between items-center border p-2 rounded bg-white shadow-sm"
-          >
-            <span>
-              {e.name}{' '}
-              {e.briefwahl?.toLowerCase() === 'ja' && (
-                <span className="text-sm text-green-600">(Briefwahl)</span>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="bg-white rounded shadow overflow-x-auto">
+        <table className="min-w-full text-sm text-left">
+          <thead className="bg-green-100 text-green-800">
+            <tr>
+              <th className="p-2">Name</th>
+              <th className="p-2">Briefwahl</th>
+              <th className="p-2">Zeitpunkt</th>
+              <th className="p-2">Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {eintraege.map((eintrag) => (
+              <tr key={eintrag.id} className="border-t">
+                <td className="p-2">{eintrag.name}</td>
+                <td className="p-2">{eintrag.briefwahl}</td>
+                <td className="p-2">{new Date(eintrag.zeitpunkt).toLocaleString()}</td>
+                <td className="p-2">
+                  <button
+                    onClick={() => loeschen(eintrag.id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Löschen
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  )
+  );
 }

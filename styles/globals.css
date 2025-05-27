@@ -2,8 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Optional: kleine Anpassungen */
+/* ========== CUSTOM GLOBAL STYLES ========== */
+
 body {
-  font-family: sans-serif;
-  background-color: #f9fafb;
+  @apply bg-green-50 text-gray-800 font-sans;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply text-green-800 font-bold;
+}
+
+input, select, textarea {
+  @apply border border-gray-300 rounded px-3 py-2 w-full;
+}
+
+button {
+  @apply rounded px-4 py-2;
+}
+
+table th {
+  @apply bg-green-100 text-green-800 font-semibold;
+}
+
+table td {
+  @apply p-2;
+}
+
+.shadowed-box {
+  @apply bg-white p-4 rounded shadow;
 }

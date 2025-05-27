@@ -42,40 +42,47 @@ const users = {
   Caka2025: 'Burak Caka',
   Kürklü2026: 'Ismihan Kürklü',
   Erdogan2025: 'Musa Erdogan'
-}
+};
 
 export default function Login() {
-  const [pw, setPw] = useState('')
-  const router = useRouter()
+  const [pw, setPw] = useState('');
+  const router = useRouter();
 
   const handleLogin = () => {
-    if (users[pw]) {
-      localStorage.setItem('mitglied', users[pw])
-      if (pw === 'Admin2025') router.push('/admin')
-      else router.push('/dashboard')
+    const name = users[pw];
+    if (name) {
+      // Setze Cookies für Login und Namen (gültig für 1 Tag)
+      document.cookie = `eingeloggt=true; path=/; max-age=86400`;
+      document.cookie = `mitglied=${encodeURIComponent(name)}; path=/; max-age=86400`;
+
+      if (pw === 'Admin2025') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } else {
-      alert('Falsches Passwort')
+      alert('Falsches Passwort');
     }
-  }
+  };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-green-50">
       <div className="bg-white p-6 rounded-xl shadow-md w-80 text-center">
-        <h1 className="text-2xl font-bold mb-4">Login</h1>
+        <h1 className="text-2xl font-bold mb-4 text-green-800">Login</h1>
         <input
           type="password"
           className="border w-full px-3 py-2 mb-4 rounded"
           placeholder="Passwort eingeben"
           value={pw}
-          onChange={e => setPw(e.target.value)}
+          onChange={(e) => setPw(e.target.value)}
         />
         <button
           onClick={handleLogin}
-          className="bg-green-600 text-white px-4 py-2 rounded w-full"
+          className="bg-green-600 text-white px-4 py-2 rounded w-full hover:bg-green-700"
         >
           Weiter
         </button>
       </div>
     </div>
-  )
+  );
 }

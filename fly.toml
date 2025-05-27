@@ -7,3 +7,16 @@ primary_region = "ams"
 [mounts]
   source = "wahlstimmen_volume"
   destination = "/data"
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+  [[services.ports]]
+    port = 443
+
+  [[services.tcp_checks]]
+    interval = 10000
+    timeout = 2000

@@ -1,18 +1,17 @@
-# OFFIZIELLER NODE BUILDER
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-COPY . .
-
-RUN npm install
-RUN npm run build
-
-# PRODUKTIONSSTAGE
+# Basis-Image mit Node.js
 FROM node:18-alpine
 
+# Arbeitsverzeichnis setzen
 WORKDIR /app
-COPY --from=builder /app .
 
-EXPOSE 3000
+# Dateien kopieren
+COPY . .
 
+# Abhängigkeiten installieren
+RUN npm install
+
+# Next.js builden
+RUN npm run build
+
+# App starten
 CMD ["npm", "start"]

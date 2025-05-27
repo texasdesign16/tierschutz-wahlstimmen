@@ -1,76 +1,61 @@
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-import { fetchEintraege } from '../lib/sheet'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 export default function Admin() {
-  const [daten, setDaten] = useState([])
-  const router = useRouter()
+  const [stats, setStats] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
-    const mitglied = localStorage.getItem('mitglied')
-    if (mitglied !== 'Admin') {
-      router.push('/')
+    const isLoggedIn = document.cookie.includes('eingeloggt=true');
+    if (!isLoggedIn) {
+      router.push('/');
     } else {
-      ladeAuswertung()
+      ladeStatistik();
     }
-  }, [])
+  }, []);
 
-  const ladeAuswertung = async () => {
-    const eintraege = await fetchEintraege()
-    const gruppiert = {}
+  const ladeStatistik = async () => {
+    const res = await fetch('/api/adminstats');
+    const data = await res.json();
+    setStats(data);
+  };
 
-    eintraege.forEach(eintrag => {
-      const m = eintrag.mitglied || 'Unbekannt'
-      if (!gruppiert[m]) gruppiert[m] = { gesamt: 0, briefwahl: 0 }
-      gruppiert[m].gesamt++
-      if (eintrag.briefwahl?.toLowerCase() === 'ja') gruppiert[m].briefwahl++
-    })
-
-    const auswertung = Object.entries(gruppiert).map(([mitglied, werte]) => ({
-      mitglied,
-      ...werte,
-    }))
-
-    setDaten(auswertung)
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('mitglied')
-    router.push('/')
-  }
+  const logout = () => {
+    document.cookie = 'eingeloggt=; Max-Age=0';
+    router.push('/');
+  };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-green-50 p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Adminbereich – Auswertung</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-4 py-2 rounded"
-        >
+        <h1 className="text-2xl font-bold text-green-800">Adminbereich – Statistik</h1>
+        <button onClick={logout} className="text-white bg-green-600 px-4 py-2 rounded hover:bg-green-700">
           Logout
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border text-sm">
-          <thead className="bg-gray-200">
+      <div className="bg-white rounded shadow overflow-x-auto">
+        <table className="min-w-full text-sm text-left">
+          <thead className="bg-green-100 text-green-800">
             <tr>
-              <th className="p-3 border">Mitglied</th>
-              <th className="p-3 border">Gesamt</th>
-              <th className="p-3 border">Briefwahl</th>
+              <th className="p-2">Name</th>
+              <th className="p-2">Mit Briefwahl</th>
+              <th className="p-2">Ohne Briefwahl</th>
+              <th className="p-2">Gesamt</th>
             </tr>
           </thead>
           <tbody>
-            {daten.map((d, i) => (
-              <tr key={i} className="text-center border-t hover:bg-gray-50">
-                <td className="p-3 border font-medium">{d.mitglied}</td>
-                <td className="p-3 border">{d.gesamt}</td>
-                <td className="p-3 border">{d.briefwahl}</td>
+            {stats.map((eintrag, i) => (
+              <tr key={i} className="border-t">
+                <td className="p-2">{eintrag.name}</td>
+                <td className="p-2 text-green-700 font-semibold">{eintrag.mitBriefwahl}</td>
+                <td className="p-2 text-yellow-700 font-semibold">{eintrag.ohneBriefwahl}</td>
+                <td className="p-2 text-gray-700">{eintrag.gesamt}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
     </div>
-  )
+  );
 }
